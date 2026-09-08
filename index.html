@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Travel Animation</title>
+<meta name="description" content="Animate a road trip on a real map with a real route and export it to MP4 — free, no keys, runs in the browser.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<aside id="panel">
+  <div class="head">
+    <h1>Travel Animation</h1>
+    <select id="lang" aria-label="Language"><option value="ru">Русский</option><option value="en">English</option></select>
+  </div>
+  <p class="muted" data-i18n="app.tagline"></p>
+
+  <section>
+    <h2 data-i18n="sec.route"></h2>
+    <label><span data-i18n="wp.label"></span><br>
+      <textarea id="wp" rows="5" spellcheck="false" data-i18n-placeholder="wp.placeholder"></textarea></label>
+    <p class="hint" data-i18n-html="wp.hint"></p>
+    <button id="btnRoute" class="primary" data-i18n="btn.route"></button>
+    <div id="routeInfo" class="info" data-i18n="status.loading"></div>
+  </section>
+
+  <section>
+    <h2 data-i18n="sec.titles"></h2>
+    <label><span data-i18n="title.label"></span> <input id="title" type="text"></label>
+    <label><span data-i18n="subtitle.label"></span> <input id="subtitle" type="text"></label>
+  </section>
+
+  <section>
+    <h2 data-i18n="sec.timing"></h2>
+    <label class="row"><span data-i18n="timing.drive"></span><input id="drive" type="range" min="5" max="120" step="1"><output></output></label>
+    <label class="row"><span data-i18n="timing.intro"></span><input id="intro" type="range" min="0" max="6" step="0.5"><output></output></label>
+    <label class="row"><span data-i18n="timing.outro"></span><input id="outro" type="range" min="0" max="8" step="0.5"><output></output></label>
+    <label class="row"><span data-i18n="timing.hold"></span><input id="hold" type="range" min="0" max="4" step="0.5"><output></output></label>
+  </section>
+
+  <section>
+    <h2 data-i18n="sec.camera"></h2>
+    <label><span data-i18n="camera.mode"></span>
+      <select id="mode">
+        <option value="follow" data-i18n="camera.follow"></option>
+        <option value="north" data-i18n="camera.north"></option>
+      </select></label>
+    <label class="row"><span data-i18n="camera.zoom"></span><input id="zoom" type="range" min="4" max="12" step="0.1"><output></output></label>
+    <label class="row"><span data-i18n="camera.pitch"></span><input id="pitch" type="range" min="0" max="72" step="1"><output></output></label>
+    <label class="row"><span data-i18n="camera.offset"></span><input id="carOffset" type="range" min="0" max="0.4" step="0.01"><output></output></label>
+  </section>
+
+  <section>
+    <h2 data-i18n="sec.map"></h2>
+    <label><span data-i18n="map.style"></span>
+      <select id="style">
+        <option value="liberty" data-i18n="style.liberty"></option>
+        <option value="bright" data-i18n="style.bright"></option>
+        <option value="positron" data-i18n="style.positron"></option>
+        <option value="fiord" data-i18n="style.fiord"></option>
+        <option value="dark" data-i18n="style.dark"></option>
+      </select></label>
+    <div class="grid2">
+      <label class="check"><input id="hillshade" type="checkbox"> <span data-i18n="map.hillshade"></span></label>
+      <label class="check"><input id="terrain" type="checkbox"> <span data-i18n="map.terrain"></span></label>
+    </div>
+    <label class="row"><span data-i18n="map.terrainScale"></span><input id="terrainScale" type="range" min="0.5" max="4" step="0.1"><output></output></label>
+    <div class="grid2">
+      <label><span data-i18n="map.routeColor"></span> <input id="routeColor" type="color"></label>
+      <label><span data-i18n="map.carColor"></span> <input id="carColor" type="color"></label>
+    </div>
+    <label class="check"><input id="car3d" type="checkbox"> <span data-i18n="map.car3d"></span></label>
+    <label class="row"><span data-i18n="map.carSize"></span><input id="carSize" type="range" min="0.4" max="2" step="0.05"><output></output></label>
+    <label><span data-i18n="map.carFile"></span> <input id="carFile" type="file" accept="image/*"></label>
+  </section>
+
+  <section>
+    <h2 data-i18n="sec.video"></h2>
+    <div class="grid3">
+      <label><span data-i18n="video.format"></span>
+        <select id="format"><option value="16:9">16:9</option><option value="9:16">9:16</option><option value="1:1">1:1</option></select></label>
+      <label><span data-i18n="video.quality"></span>
+        <select id="res"><option value="720">720p</option><option value="1080">1080p</option><option value="2160">4K</option></select></label>
+      <label><span data-i18n="video.fps"></span>
+        <select id="fps"><option value="30">30</option><option value="60">60</option></select></label>
+    </div>
+    <label class="row"><span data-i18n="video.bitrate"></span><input id="bitrate" type="range" min="4" max="60" step="1"><output></output></label>
+    <button id="btnExport" class="primary big" data-i18n="btn.export"></button>
+    <div id="exportProgress" hidden>
+      <div class="bar"><div id="exportBar"></div></div>
+      <div class="exportRow"><span id="exportText">…</span><button id="btnCancelExport" class="ghost" data-i18n="export.cancel"></button></div>
+    </div>
+    <p class="hint" data-i18n="export.hint"></p>
+  </section>
+
+  <footer class="muted small" data-i18n="footer"></footer>
+</aside>
+
+<main id="viewport">
+  <div id="stage-wrap">
+    <div id="stage">
+      <div id="map"></div>
+      <canvas id="hud"></canvas>
+    </div>
+  </div>
+  <div id="playbar">
+    <button id="btnPlay" data-i18n-title="play.title">▶</button>
+    <input id="scrub" type="range" min="0" max="1" step="0.01" value="0">
+    <span id="timeLabel">0.0 / 0.0</span>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/build/mp4-muxer.min.js"></script>
+<script type="module" src="src/app.js"></script>
+</body>
+</html>

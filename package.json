@@ -1,0 +1,10 @@
+{
+  "name": "travel-animation",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Анимация машинки по реальному маршруту на реальной карте с экспортом в MP4",
+  "scripts": {
+    "start": "python3 serve.py 8765"
+  },
+  "type": "module"
+}
