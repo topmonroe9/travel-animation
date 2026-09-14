@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://topmonroe9.github.io/travel-animation/</loc>
+    <lastmod>2026-09-14</lastmod>
+  </url>
+  <url>
+    <loc>https://topmonroe9.github.io/travel-animation/guide/</loc>
+    <lastmod>2026-09-14</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://topmonroe9.github.io/travel-animation/guide/"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://topmonroe9.github.io/travel-animation/guide/ru/"/>
+  </url>
+  <url>
+    <loc>https://topmonroe9.github.io/travel-animation/guide/ru/</loc>
+    <lastmod>2026-09-14</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://topmonroe9.github.io/travel-animation/guide/"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://topmonroe9.github.io/travel-animation/guide/ru/"/>
+  </url>
+</urlset>

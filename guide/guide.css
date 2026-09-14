@@ -1,0 +1,109 @@
+:root {
+  --ink: #0f1218;
+  --panel: #171b23;
+  --raised: #1e232d;
+  --line: #262c37;
+  --line-2: #353c4a;
+  --text: #e8eaef;
+  --muted: #9aa1af;
+  --faint: #6b7382;
+  --route: #ff3b30;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body { margin: 0; background: var(--ink); color: var(--text); font: 17px/1.6 Inter, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { color: inherit; }
+img, video { display: block; max-width: 100%; }
+:focus-visible { outline: 2px solid var(--route); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+.wrap { width: 100%; max-width: 1140px; margin: 0 auto; padding-inline: 24px; }
+
+/* верхняя полоса */
+.top { position: sticky; top: 0; z-index: 10; background: rgba(15, 18, 24, 0.86); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 64px; }
+.logo { display: flex; align-items: center; gap: 10px; font-weight: 700; text-decoration: none; letter-spacing: -0.01em; }
+.logo svg { width: 30px; height: 30px; }
+.top nav { display: flex; align-items: center; gap: 18px; font-size: 15px; }
+.top nav a:not(.btn) { color: var(--muted); text-decoration: none; }
+.top nav a:not(.btn):hover { color: var(--text); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 22px; border-radius: 12px; background: var(--route); color: #fff; font-weight: 600; text-decoration: none; white-space: nowrap; }
+.btn:hover { filter: brightness(1.08); }
+.btn.small { padding: 8px 14px; font-size: 14px; border-radius: 10px; }
+.btn.big { padding: 16px 28px; font-size: 18px; border-radius: 14px; }
+
+/* первый экран */
+.hero { padding: 72px 0 56px; }
+.hero .wrap { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 48px; align-items: center; }
+.hero h1 { margin: 0 0 20px; font-size: clamp(36px, 5vw, 58px); line-height: 1.04; letter-spacing: -0.035em; font-weight: 800; text-wrap: balance; }
+.lead { margin: 0 0 30px; color: var(--muted); font-size: clamp(17px, 1.6vw, 20px); max-width: 34em; }
+.cta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px; }
+.cta p { margin: 0; color: var(--faint); font-size: 14px; }
+.stage { position: relative; border-radius: 14px; overflow: hidden; background: var(--panel); box-shadow: 0 40px 90px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--line); aspect-ratio: 16 / 9; }
+.stage video { width: 100%; height: 100%; object-fit: cover; }
+
+.facts { display: flex; flex-wrap: wrap; gap: 10px; margin: 34px 0 0; padding: 0; list-style: none; }
+.facts li { padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 14px; }
+
+/* разделы */
+section { padding: 72px 0; border-top: 1px solid var(--line); }
+h2 { margin: 0 0 12px; font-size: clamp(28px, 3.4vw, 40px); line-height: 1.12; letter-spacing: -0.025em; font-weight: 800; text-wrap: balance; }
+.sub { margin: 0 0 44px; color: var(--muted); max-width: 40em; }
+
+/* шаги — та же схема маршрута, что в приложении */
+.steps { position: relative; margin: 0; padding: 0; list-style: none; }
+.step { position: relative; display: grid; grid-template-columns: 56px minmax(0, 5fr) minmax(0, 6fr); gap: 0 28px; padding-bottom: 56px; }
+.step:last-child { padding-bottom: 0; }
+.step::before { content: ""; position: absolute; left: 26px; top: 28px; bottom: -28px; width: 4px; border-radius: 2px; background: var(--route); }
+.step:last-child::before { display: none; }
+.node { position: relative; z-index: 1; width: 56px; height: 56px; display: grid; place-items: center; border-radius: 50%; font-size: 24px; border: 3px solid var(--c); background: color-mix(in srgb, var(--c) 24%, var(--ink)); box-shadow: 0 0 0 6px var(--ink); }
+.step h3 { margin: 10px 0 10px; font-size: 24px; line-height: 1.2; letter-spacing: -0.015em; }
+.step p { margin: 0 0 12px; color: var(--muted); }
+.step .shot { margin: 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: var(--panel); align-self: start; }
+
+/* что в ролике */
+.features { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 56px; margin: 0; }
+.features div { padding: 22px 0; border-top: 1px solid var(--line); }
+.features dt { font-weight: 700; font-size: 18px; margin-bottom: 4px; }
+.features dd { margin: 0; color: var(--muted); }
+
+/* форматы */
+.formats { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 36px; margin-top: 8px; }
+.format { display: grid; justify-items: start; gap: 10px; }
+.format i { display: block; border: 3px solid var(--line-2); border-radius: 8px; background: linear-gradient(160deg, #2b3446, #1a1f2a); }
+.format b { font-size: 20px; }
+.format span { color: var(--muted); font-size: 15px; margin-top: -8px; }
+
+/* вопросы */
+.faq { max-width: 820px; }
+.faq details { border-top: 1px solid var(--line); }
+.faq details:last-child { border-bottom: 1px solid var(--line); }
+.faq summary { cursor: pointer; list-style: none; display: flex; justify-content: space-between; gap: 16px; padding: 20px 0; font-weight: 600; font-size: 18px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; color: var(--muted); font-weight: 400; font-size: 24px; line-height: 1; }
+.faq details[open] summary::after { content: "−"; }
+.faq details p { margin: 0 0 22px; color: var(--muted); max-width: 42em; }
+
+.final { text-align: center; }
+.final .sub { margin-inline: auto; }
+
+footer { padding: 36px 0 48px; border-top: 1px solid var(--line); color: var(--faint); font-size: 14px; }
+footer p { margin: 0 0 8px; max-width: 60em; }
+
+@media (max-width: 900px) {
+  .hero { padding-top: 44px; }
+  .hero .wrap { grid-template-columns: 1fr; gap: 36px; }
+  .step { grid-template-columns: 56px minmax(0, 1fr); }
+  .step .shot { grid-column: 2; margin-top: 8px; }
+  .features { grid-template-columns: 1fr; }
+  .top nav a.hide-sm { display: none; }
+}
+@media (max-width: 480px) {
+  .wrap { padding-inline: 16px; }
+  .step { grid-template-columns: 44px minmax(0, 1fr); gap: 0 16px; }
+  .node { width: 44px; height: 44px; font-size: 19px; }
+  .step::before { left: 20px; top: 22px; bottom: -22px; }
+  .top nav { gap: 12px; }
+}

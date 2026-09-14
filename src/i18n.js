@@ -4,6 +4,7 @@ const DICT = {
   ru: {
     'app.tagline': 'Ролик поездки на реальной карте',
     'lang.label': 'Язык',
+    'help.title': 'Как пользоваться',
     'tab.route': 'Маршрут',
     'tab.story': 'Ролик',
     'tab.map': 'Карта',
@@ -154,6 +155,7 @@ const DICT = {
   en: {
     'app.tagline': 'A road-trip video on a real map',
     'lang.label': 'Language',
+    'help.title': 'How to use',
     'tab.route': 'Route',
     'tab.story': 'Video story',
     'tab.map': 'Map',

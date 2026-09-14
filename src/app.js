@@ -17,6 +17,8 @@ const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 
 applyDom();
+const syncHelpLink = () => { $('#helpLink').href = lang === 'ru' ? 'guide/ru/' : 'guide/'; };
+syncHelpLink();
 
 // Встроенный пример (routes/sample.json): координаты совпадают, поэтому маршрут грузится без сети.
 const SAMPLE_COORDS = [[11.582, 48.1351], [11.3927, 47.2692], [12.3155, 45.4408]];
@@ -626,6 +628,7 @@ $('#lang').addEventListener('change', (e) => {
   setLang(next);
   saveCfg();
   applyDom();
+  syncHelpLink();
   $('#title').value = cfg.title;
   $('#subtitle').value = cfg.subtitle;
   scene.setLang(next);

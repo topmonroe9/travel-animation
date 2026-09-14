@@ -1,12 +1,62 @@
-# Travel Animation
+# Travel Animation — free animated travel map video maker
 
-[Русская версия](README.ru.md) · **Live demo: https://topmonroe9.github.io/travel-animation/**
+[Русский](README.ru.md)
 
-Animate a road trip on a **real map** along a **real road route** and export it to MP4.
-A free, self-hosted alternative to travelboast / mult.dev: no API keys, no subscriptions, no backend.
-One static page that runs in Chrome.
+**Turn your road trip into an animated map video: a car drives along real roads, your photos play at
+each stop, and you get an MP4 for Reels, TikTok or YouTube. Free, in the browser, no sign-up, no
+watermark.**
 
-![Preview](docs/preview.png)
+### 👉 [Open Travel Animation](https://topmonroe9.github.io/travel-animation/) · [Step-by-step guide](https://topmonroe9.github.io/travel-animation/guide/)
+
+![Example: the car arrives in Verona and photos drop into a pile of polaroids](docs/demo.gif)
+
+No installation, no account, no GitHub knowledge needed: open the link above in Chrome, Edge or Arc on
+a computer.
+
+## Make your video in four steps
+
+1. **Add stops.** Type a city or an address and press Enter. The route is built along real roads with
+   distances between stops. Drag stops to reorder, or paste the whole list with “Paste as a list”.
+2. **Style stops and add photos.** Click a stop icon to choose its type (fuel, rest, food, overnight,
+   sight, nature, sea…), how it looks on the map (flag, badge or hidden), a label, emoji and color. Drop
+   photos onto the stop; iPhone photos work too. “Whole gallery, s” sets how long that stop’s photos play.
+3. **Set up the story.** The Video story tab has captions, gallery style (polaroids or slides), photo
+   size, seconds per photo and timing. On the Route tab the odometer can start from any value, such as
+   2,500 km for the second leg of a trip.
+4. **Export MP4.** On the Export tab choose 16:9 (YouTube), 9:16 (Reels, Shorts, TikTok) or 1:1 and the
+   quality up to 4K. Press “Export MP4” and keep the tab visible while it renders.
+
+![The app: a stop menu with photos and a gallery in the preview](docs/preview.jpg)
+
+## What ends up in the video
+
+- a route along real roads: the travelled part glows, the road ahead is dashed;
+- a 3D car (or your own image), with the camera turning along the road;
+- terrain with 3D mountains and hillshade;
+- stop flags and badges with emoji;
+- photo galleries at stops: the car slows down, photos fly out of the flag, flip by and fly back;
+- title, subtitle, a running odometer and a progress bar with stop marks.
+
+## Questions
+
+**Is it free?** Completely: no subscription, no watermark, no sign-up. The code is open source (MIT).
+
+**Where do my photos go?** Nowhere. They are processed and stored in your browser on your computer. Only
+stop names (to find them on the map) and coordinates (to build the route) are sent over the internet.
+
+**Which browser do I need?** Chrome, Edge or Arc on a computer. Export on phones is not tested.
+
+**How long does export take?** It depends on length, quality and your connection: a 30-second 1080p
+video usually takes a few minutes.
+
+**Is it an alternative to TravelBoast, Mult.dev or Travel Animator?** It makes the same kind of video — an
+animated route on a map — for free, up to 4K and without a watermark.
+
+Full illustrated guide: https://topmonroe9.github.io/travel-animation/guide/
+
+---
+
+# For developers
 
 ## Run locally
 
@@ -18,49 +68,13 @@ open http://127.0.0.1:8765
 ```
 
 Use `127.0.0.1` rather than `localhost` (Chrome tries IPv6 first, the dev server listens on IPv4).
-Chrome / Edge / Arc are required: export relies on WebCodecs. Internet access is needed for map tiles,
-geocoding and routing; libraries are loaded from CDNs and cached by the browser.
+There is no build step: plain static files with libraries from CDNs. Every push to `main` is published
+to GitHub Pages. The interface follows the browser language (Russian or English).
 
-The interface follows the browser language (Russian or English) and can be switched in the top-left corner.
-
-## Usage
-
-The panel has four tabs: **Route**, **Video story**, **Map** and **Export**. The export button and the
-video length stay at the bottom.
-
-1. **Stops** are a route diagram: each stop is its own row, with road distances between them. Type a city
-   or an address and press Enter: Nominatim finds it and OSRM rebuilds the road route (results are cached
-   in localStorage). Drag a row by its handle to reorder. The first stop is the start and the last one is
-   the finish, unless you pick another type.
-2. **Stop menu** (the chevron or the round icon):
-   - type: start, finish, fuel, rest, food, overnight, photo, sight, nature, sea, home, place;
-   - how it looks on the map: a flag with a label, a round badge on a stem, or hidden (the point only
-     shapes the route); a custom label, emoji and color;
-   - photos: drop files onto the stop or press “Add”, drag thumbnails to reorder or move them to another
-     stop. HEIC from iPhone is converted in the browser. Photos are downscaled to 2400 px and kept in
-     IndexedDB, so they survive a reload. “Whole gallery, s” sets how long the photos of this stop play:
-     7 photos in 4 seconds flip by quickly;
-   - how long the car waits, and exact coordinates instead of geocoding.
-3. **Paste as a list** keeps the old text format for quick input:
-   `Innsbruck #fuel`, `Verona #sleep ~3`, `Cabin @ 46.49, 11.33`. Photos and styling of stops with the
-   same name are kept.
-4. **Odometer**: “Start at” sets the initial reading — for the second part of a trip the counter can run
-   from 2,500 instead of zero. “of N km” can be hidden.
-5. **Video story**: captions, the gallery style (polaroids dropping into a pile, or slides with a
-   crossfade), photo size in the frame, seconds per photo, timing. “Driving” is pure motion time; stops and galleries add to it.
-6. **Export MP4**: pick 16:9, 9:16 (Reels, Shorts, TikTok) or 1:1 and the quality. Rendering is frame by
-   frame inside this tab; keep it visible, because browsers stop rendering background tabs.
-
-Space or a click on the frame plays the preview. Stop markers on the scrubber jump to the stop, and a
-stop menu has a “Play” button that plays the approach and the gallery.
-
-In the frame: title and subtitle, a running kilometre counter (from any starting value), a progress bar
-with stop ticks, a dashed line for the road ahead, the travelled path with a glow, stop flags or badges
-that pop up next to the car as it arrives, a photo gallery at a stop (the car slows down, the photos fly
-out of the flag, flip and fly back, then the car drives on), the car itself as a flat
-top-down SVG icon, a low-poly 3D model rendered with three.js (hatchback with roof rails and a roof box)
-or your own PNG, hillshade and 3D terrain with adjustable exaggeration, and a sky at the horizon when
-the camera is pitched.
+Interface details: stops live in localStorage, photos in IndexedDB (downscaled to 2400 px, HEIC via
+heic2any); the “Paste as a list” text format is `Innsbruck #fuel`, `Verona #sleep ~3`,
+`Cabin @ 46.49, 11.33`. “Driving” in timing is pure motion time; stops and galleries add to it. For search
+engines and AI assistants there are `guide/` (EN/RU), `llms.txt`, `sitemap.xml` and JSON-LD on the pages.
 
 ## Architecture
 
@@ -152,3 +166,12 @@ slower and deserves a 40–60 Mbit/s bitrate. The file is assembled in memory: e
 ## License
 
 MIT. Map data © OpenStreetMap contributors, ODbL.
+
+Demo photos in `docs/` are from Wikimedia Commons under CC0:
+[Innsbruck panorama west](https://commons.wikimedia.org/wiki/File:Innsbruck_panorama_west.JPG),
+[Panorama Innsbruck Hungerburg 2023 (2)](https://commons.wikimedia.org/wiki/File:Panorama_Innsbruck_Hungerburg_2023_(2).jpg),
+[Road in Alps, Bayern](https://commons.wikimedia.org/wiki/File:Road_in_Alps,_Bayern,_Germany_01.jpg),
+[Verona cityscape sunny](https://commons.wikimedia.org/wiki/File:Verona_cityscape_sunny.jpg),
+[A view of Verona from Castel San Pietro](https://commons.wikimedia.org/wiki/File:A_view_of_Verona_from_Castel_San_Pietro.jpg),
+[The Grand Canal, Venice 2016](https://commons.wikimedia.org/wiki/File:The_Grand_Canal,_Venice_2016.jpg),
+[Venice Canal 20170512](https://commons.wikimedia.org/wiki/File:Venice_Canal_20170512.jpg).

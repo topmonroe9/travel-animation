@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://topmonroe9.github.io/travel-animation/sitemap.xml

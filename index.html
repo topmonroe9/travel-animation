@@ -3,8 +3,57 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Travel Animation</title>
-<meta name="description" content="Animate a road trip on a real map with a real route, photos at stops, and export it to MP4 — free, no keys, runs in the browser.">
+<title>Travel Animation — free travel map animation and route video maker</title>
+<meta name="description" content="Make an animated travel map video for free: your road-trip route on a real 3D map, photo galleries at stops, a running odometer, MP4 for Reels, TikTok and YouTube. No sign-up, no watermark.">
+<link rel="canonical" href="https://topmonroe9.github.io/travel-animation/">
+<link rel="alternate" hreflang="x-default" href="https://topmonroe9.github.io/travel-animation/">
+<link rel="help" href="https://topmonroe9.github.io/travel-animation/guide/">
+<meta name="theme-color" content="#171b23">
+<meta name="application-name" content="Travel Animation">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="docs/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Travel Animation">
+<meta property="og:title" content="Travel Animation — free animated travel map videos">
+<meta property="og:description" content="Your road trip on a real map: route along real roads, photos at stops, odometer, MP4 export for Reels, TikTok and YouTube. Free, in the browser, no sign-up.">
+<meta property="og:url" content="https://topmonroe9.github.io/travel-animation/">
+<meta property="og:image" content="https://topmonroe9.github.io/travel-animation/docs/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ru_RU">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://topmonroe9.github.io/travel-animation/docs/og-image.jpg">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Travel Animation",
+  "alternateName": ["Анимация маршрута путешествия на карте", "Travel map video maker"],
+  "url": "https://topmonroe9.github.io/travel-animation/",
+  "description": "Free browser app that turns a road-trip route into an animated map video: a car drives along real roads on a 3D map, stop flags pop up, photo galleries play at stops, the odometer runs, and the result is exported to MP4 (16:9, 9:16, 1:1).",
+  "applicationCategory": "MultimediaApplication",
+  "applicationSubCategory": "Video editor",
+  "operatingSystem": "Any. Runs in Chrome, Edge or Arc",
+  "browserRequirements": "Requires WebGL and WebCodecs (Chrome, Edge, Arc)",
+  "inLanguage": ["en", "ru"],
+  "isAccessibleForFree": true,
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "license": "https://opensource.org/licenses/MIT",
+  "screenshot": "https://topmonroe9.github.io/travel-animation/docs/preview.jpg",
+  "image": "https://topmonroe9.github.io/travel-animation/docs/og-image.jpg",
+  "sameAs": ["https://github.com/topmonroe9/travel-animation"],
+  "featureList": [
+    "Route along real roads from city names or coordinates",
+    "Animated car on a 3D terrain map",
+    "Stop types and markers: fuel, rest, food, overnight, sights and more",
+    "Photo galleries at stops: polaroids or slides",
+    "Odometer that can start from any value",
+    "MP4 export in 16:9, 9:16 (Reels, Shorts, TikTok) and 1:1, up to 4K 60 fps",
+    "No sign-up, no watermark, works in the browser"
+  ]
+}
+</script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,17 +70,21 @@
       </svg>
       <div>
         <h1>Travel Animation</h1>
-        <p class="tagline" data-i18n="app.tagline"></p>
+        <p class="tagline" data-i18n="app.tagline">A road-trip video on a real map</p>
       </div>
     </div>
-    <select id="lang" aria-label="Language"><option value="ru">RU</option><option value="en">EN</option></select>
+    <div class="head-actions">
+      <a id="helpLink" class="help" href="guide/" target="_blank" rel="noopener" data-i18n-title="help.title" title="How to use" aria-label="How to use">?</a>
+      <select id="lang" aria-label="Language"><option value="ru">RU</option><option value="en">EN</option></select>
+    </div>
   </header>
+  <noscript><p class="hint">Travel Animation needs JavaScript. <a href="guide/">Read how it works</a>.</p></noscript>
 
   <nav class="tabs" role="tablist">
-    <button class="tab" role="tab" data-tab="route" data-i18n="tab.route"></button>
-    <button class="tab" role="tab" data-tab="story" data-i18n="tab.story"></button>
-    <button class="tab" role="tab" data-tab="map" data-i18n="tab.map"></button>
-    <button class="tab" role="tab" data-tab="video" data-i18n="tab.video"></button>
+    <button class="tab" role="tab" data-tab="route" data-i18n="tab.route">Route</button>
+    <button class="tab" role="tab" data-tab="story" data-i18n="tab.story">Video story</button>
+    <button class="tab" role="tab" data-tab="map" data-i18n="tab.map">Map</button>
+    <button class="tab" role="tab" data-tab="video" data-i18n="tab.video">Export</button>
   </nav>
 
   <div class="p-body">
@@ -39,28 +92,30 @@
     <div class="pane" data-pane="route" role="tabpanel">
       <ol id="points" class="points"></ol>
       <div class="points-foot">
-        <button id="btnAddPoint" class="add-point"><span class="add-node" aria-hidden="true">+</span><span data-i18n="points.add"></span></button>
-        <button id="btnImport" class="link" data-i18n="points.import"></button>
+        <button id="btnAddPoint" class="add-point"><span class="add-node" aria-hidden="true">+</span><span data-i18n="points.add">Add a stop</span></button>
+        <button id="btnImport" class="link" data-i18n="points.import">Paste as a list</button>
       </div>
       <div id="importBox" class="import" hidden>
-        <textarea id="importText" rows="6" spellcheck="false" data-i18n-placeholder="wp.placeholder"></textarea>
-        <p class="hint" data-i18n-html="wp.hint"></p>
+        <textarea id="importText" rows="6" spellcheck="false" data-i18n-placeholder="wp.placeholder" placeholder="Munich
+Innsbruck #rest
+Venice"></textarea>
+        <p class="hint" data-i18n-html="wp.hint">One stop per line. Type: <code>Innsbruck #fuel</code>, a 3-second stop: <code>Verona #sleep ~3</code>, coordinates: <code>Cabin @ 47.26, 11.39</code>. Photos and styling of stops with the same name are kept.</p>
         <div class="btn-row">
-          <button id="btnImportApply" class="primary" data-i18n="points.importApply"></button>
-          <button id="btnImportCancel" class="ghost" data-i18n="points.importCancel"></button>
+          <button id="btnImportApply" class="primary" data-i18n="points.importApply">Replace stops</button>
+          <button id="btnImportCancel" class="ghost" data-i18n="points.importCancel">Cancel</button>
         </div>
       </div>
       <div id="routeInfo" class="info"></div>
 
       <section class="group">
-        <h2 data-i18n="sec.odometer"></h2>
+        <h2 data-i18n="sec.odometer">Odometer</h2>
         <div class="odo">
           <label class="odo-field">
-            <span data-i18n="odo.start"></span>
+            <span data-i18n="odo.start">Start at</span>
             <input id="kmStart" type="number" min="0" step="1" inputmode="numeric">
-            <em data-i18n="hud.km"></em>
+            <em data-i18n="hud.km">km</em>
           </label>
-          <label class="check"><input id="showTotal" type="checkbox"> <span data-i18n="odo.showTotal"></span></label>
+          <label class="check"><input id="showTotal" type="checkbox"> <span data-i18n="odo.showTotal">Show “of N km”</span></label>
         </div>
         <p id="odoHint" class="hint"></p>
       </section>
@@ -69,111 +124,111 @@
     <!-- Ролик -->
     <div class="pane" data-pane="story" role="tabpanel" hidden>
       <section class="group">
-        <h2 data-i18n="sec.titles"></h2>
-        <label><span data-i18n="title.label"></span> <input id="title" type="text"></label>
-        <label><span data-i18n="subtitle.label"></span> <input id="subtitle" type="text"></label>
+        <h2 data-i18n="sec.titles">Captions</h2>
+        <label><span data-i18n="title.label">Title</span> <input id="title" type="text"></label>
+        <label><span data-i18n="subtitle.label">Subtitle</span> <input id="subtitle" type="text"></label>
       </section>
 
       <section class="group">
-        <h2 data-i18n="sec.gallery"></h2>
+        <h2 data-i18n="sec.gallery">Photos at stops</h2>
         <div class="styles" role="radiogroup">
           <label class="style-card">
             <input type="radio" name="galleryStyle" value="stack">
             <span class="style-art stack" aria-hidden="true"><i></i><i></i><i></i></span>
-            <b data-i18n="gallery.stack"></b><small data-i18n="gallery.stackHint"></small>
+            <b data-i18n="gallery.stack">Polaroids</b><small data-i18n="gallery.stackHint">dropped in a pile</small>
           </label>
           <label class="style-card">
             <input type="radio" name="galleryStyle" value="slides">
             <span class="style-art slides" aria-hidden="true"><i></i><em></em></span>
-            <b data-i18n="gallery.slides"></b><small data-i18n="gallery.slidesHint"></small>
+            <b data-i18n="gallery.slides">Slides</b><small data-i18n="gallery.slidesHint">one after another</small>
           </label>
         </div>
-        <label class="row"><span data-i18n="gallery.size"></span><input id="photoSize" type="range" min="40" max="100" step="5"><output></output></label>
-        <label class="row"><span data-i18n="gallery.time"></span><input id="photoTime" type="range" min="0.3" max="6" step="0.1"><output></output></label>
-        <p class="hint" data-i18n="gallery.hint"></p>
+        <label class="row"><span data-i18n="gallery.size">Photo size, %</span><input id="photoSize" type="range" min="40" max="100" step="5"><output></output></label>
+        <label class="row"><span data-i18n="gallery.time">Seconds per photo</span><input id="photoTime" type="range" min="0.3" max="6" step="0.1"><output></output></label>
+        <p class="hint" data-i18n="gallery.hint">Photos are added in the stop menu on the Route tab, where you can also set how long the whole gallery of that stop lasts. The car waits while the gallery plays.</p>
       </section>
 
       <section class="group">
-        <h2 data-i18n="sec.timing"></h2>
-        <label class="row"><span data-i18n="timing.drive"></span><input id="drive" type="range" min="5" max="120" step="1"><output></output></label>
-        <label class="row"><span data-i18n="timing.intro"></span><input id="intro" type="range" min="0" max="6" step="0.5"><output></output></label>
-        <label class="row"><span data-i18n="timing.outro"></span><input id="outro" type="range" min="0" max="8" step="0.5"><output></output></label>
-        <label class="row"><span data-i18n="timing.hold"></span><input id="hold" type="range" min="0" max="4" step="0.5"><output></output></label>
-        <p class="total"><span data-i18n="timing.total"></span><b id="durTotal">0:00</b></p>
+        <h2 data-i18n="sec.timing">Timing</h2>
+        <label class="row"><span data-i18n="timing.drive">Driving, s</span><input id="drive" type="range" min="5" max="120" step="1"><output></output></label>
+        <label class="row"><span data-i18n="timing.intro">Intro, s</span><input id="intro" type="range" min="0" max="6" step="0.5"><output></output></label>
+        <label class="row"><span data-i18n="timing.outro">Outro, s</span><input id="outro" type="range" min="0" max="8" step="0.5"><output></output></label>
+        <label class="row"><span data-i18n="timing.hold">Stop without photos, s</span><input id="hold" type="range" min="0" max="4" step="0.5"><output></output></label>
+        <p class="total"><span data-i18n="timing.total">Video length</span><b id="durTotal">0:00</b></p>
       </section>
     </div>
 
     <!-- Карта -->
     <div class="pane" data-pane="map" role="tabpanel" hidden>
       <section class="group">
-        <h2 data-i18n="sec.camera"></h2>
-        <label><span data-i18n="camera.mode"></span>
+        <h2 data-i18n="sec.camera">Camera</h2>
+        <label><span data-i18n="camera.mode">Mode</span>
           <select id="mode">
-            <option value="follow" data-i18n="camera.follow"></option>
-            <option value="north" data-i18n="camera.north"></option>
+            <option value="follow" data-i18n="camera.follow">Follow the road (rotates)</option>
+            <option value="north" data-i18n="camera.north">North always up</option>
           </select></label>
-        <label class="row"><span data-i18n="camera.zoom"></span><input id="zoom" type="range" min="4" max="12" step="0.1"><output></output></label>
-        <label class="row"><span data-i18n="camera.pitch"></span><input id="pitch" type="range" min="0" max="72" step="1"><output></output></label>
-        <label class="row"><span data-i18n="camera.offset"></span><input id="carOffset" type="range" min="0" max="0.4" step="0.01"><output></output></label>
+        <label class="row"><span data-i18n="camera.zoom">Zoom</span><input id="zoom" type="range" min="4" max="12" step="0.1"><output></output></label>
+        <label class="row"><span data-i18n="camera.pitch">Pitch</span><input id="pitch" type="range" min="0" max="72" step="1"><output></output></label>
+        <label class="row"><span data-i18n="camera.offset">Car below center</span><input id="carOffset" type="range" min="0" max="0.4" step="0.01"><output></output></label>
       </section>
 
       <section class="group">
-        <h2 data-i18n="sec.map"></h2>
-        <label><span data-i18n="map.style"></span>
+        <h2 data-i18n="sec.map">Map</h2>
+        <label><span data-i18n="map.style">Style</span>
           <select id="style">
-            <option value="liberty" data-i18n="style.liberty"></option>
-            <option value="bright" data-i18n="style.bright"></option>
-            <option value="positron" data-i18n="style.positron"></option>
-            <option value="fiord" data-i18n="style.fiord"></option>
-            <option value="dark" data-i18n="style.dark"></option>
+            <option value="liberty" data-i18n="style.liberty">Liberty — colorful</option>
+            <option value="bright" data-i18n="style.bright">Bright — classic OSM</option>
+            <option value="positron" data-i18n="style.positron">Positron — light minimal</option>
+            <option value="fiord" data-i18n="style.fiord">Fiord — dark blue</option>
+            <option value="dark" data-i18n="style.dark">Dark</option>
           </select></label>
         <div class="grid2">
-          <label class="check"><input id="hillshade" type="checkbox"> <span data-i18n="map.hillshade"></span></label>
-          <label class="check"><input id="terrain" type="checkbox"> <span data-i18n="map.terrain"></span></label>
+          <label class="check"><input id="hillshade" type="checkbox"> <span data-i18n="map.hillshade">Hillshade</span></label>
+          <label class="check"><input id="terrain" type="checkbox"> <span data-i18n="map.terrain">3D terrain</span></label>
         </div>
-        <label class="row"><span data-i18n="map.terrainScale"></span><input id="terrainScale" type="range" min="0.5" max="4" step="0.1"><output></output></label>
-        <label class="color-row"><span data-i18n="map.routeColor"></span><input id="routeColor" type="color"></label>
+        <label class="row"><span data-i18n="map.terrainScale">Terrain exaggeration</span><input id="terrainScale" type="range" min="0.5" max="4" step="0.1"><output></output></label>
+        <label class="color-row"><span data-i18n="map.routeColor">Route color</span><input id="routeColor" type="color"></label>
       </section>
 
       <section class="group">
-        <h2 data-i18n="sec.car"></h2>
-        <label class="check"><input id="car3d" type="checkbox"> <span data-i18n="map.car3d"></span></label>
-        <label class="color-row"><span data-i18n="map.carColor"></span><input id="carColor" type="color"></label>
-        <label class="row"><span data-i18n="map.carSize"></span><input id="carSize" type="range" min="0.4" max="2" step="0.05"><output></output></label>
-        <label><span data-i18n="map.carFile"></span> <input id="carFile" type="file" accept="image/*"></label>
+        <h2 data-i18n="sec.car">Car</h2>
+        <label class="check"><input id="car3d" type="checkbox"> <span data-i18n="map.car3d">3D car</span></label>
+        <label class="color-row"><span data-i18n="map.carColor">Color</span><input id="carColor" type="color"></label>
+        <label class="row"><span data-i18n="map.carSize">Size</span><input id="carSize" type="range" min="0.4" max="2" step="0.05"><output></output></label>
+        <label><span data-i18n="map.carFile">Custom image (PNG, nose up)</span> <input id="carFile" type="file" accept="image/*"></label>
       </section>
     </div>
 
     <!-- Видео -->
     <div class="pane" data-pane="video" role="tabpanel" hidden>
       <section class="group">
-        <h2 data-i18n="video.format"></h2>
+        <h2 data-i18n="video.format">Aspect</h2>
         <div class="formats" role="radiogroup">
-          <label class="fmt"><input type="radio" name="format" value="16:9"><span class="fmt-art" style="--aw:34px;--ah:19px"></span><b>16:9</b><small data-i18n="format.wide"></small></label>
-          <label class="fmt"><input type="radio" name="format" value="9:16"><span class="fmt-art" style="--aw:15px;--ah:27px"></span><b>9:16</b><small data-i18n="format.tall"></small></label>
-          <label class="fmt"><input type="radio" name="format" value="1:1"><span class="fmt-art" style="--aw:23px;--ah:23px"></span><b>1:1</b><small data-i18n="format.square"></small></label>
+          <label class="fmt"><input type="radio" name="format" value="16:9"><span class="fmt-art" style="--aw:34px;--ah:19px"></span><b>16:9</b><small data-i18n="format.wide">YouTube</small></label>
+          <label class="fmt"><input type="radio" name="format" value="9:16"><span class="fmt-art" style="--aw:15px;--ah:27px"></span><b>9:16</b><small data-i18n="format.tall">Reels, Shorts, TikTok</small></label>
+          <label class="fmt"><input type="radio" name="format" value="1:1"><span class="fmt-art" style="--aw:23px;--ah:23px"></span><b>1:1</b><small data-i18n="format.square">Feed</small></label>
         </div>
         <div class="grid2">
-          <label><span data-i18n="video.quality"></span>
+          <label><span data-i18n="video.quality">Quality</span>
             <select id="res"><option value="720">720p</option><option value="1080">1080p</option><option value="2160">4K</option></select></label>
-          <label><span data-i18n="video.fps"></span>
+          <label><span data-i18n="video.fps">Frames per second</span>
             <select id="fps"><option value="30">30</option><option value="60">60</option></select></label>
         </div>
-        <label class="row"><span data-i18n="video.bitrate"></span><input id="bitrate" type="range" min="4" max="60" step="1"><output></output></label>
-        <p class="hint" data-i18n="export.hint"></p>
+        <label class="row"><span data-i18n="video.bitrate">Bitrate, Mbit/s</span><input id="bitrate" type="range" min="4" max="60" step="1"><output></output></label>
+        <p class="hint" data-i18n="export.hint">Export renders frame by frame in this tab: keep it visible. Requires Chrome, Edge or Arc (WebCodecs).</p>
       </section>
-      <p class="attribution" data-i18n="footer"></p>
+      <p class="attribution" data-i18n="footer">Map data © OpenStreetMap contributors (ODbL). Tiles by OpenFreeMap, routing by OSRM, terrain by AWS Terrain Tiles.</p>
     </div>
   </div>
 
   <footer class="p-foot">
     <div id="exportProgress" hidden>
       <div class="bar"><div id="exportBar"></div></div>
-      <div class="export-row"><span id="exportText">…</span><button id="btnCancelExport" class="ghost small" data-i18n="export.cancel"></button></div>
+      <div class="export-row"><span id="exportText">…</span><button id="btnCancelExport" class="ghost small" data-i18n="export.cancel">Cancel</button></div>
     </div>
     <div class="foot-row">
       <div class="foot-meta"><b id="footDur">0:00</b><span id="footSize"></span></div>
-      <button id="btnExport" class="primary" data-i18n="btn.export"></button>
+      <button id="btnExport" class="primary" data-i18n="btn.export">Export MP4</button>
     </div>
   </footer>
 </aside>
@@ -186,7 +241,7 @@
     </div>
   </div>
   <div id="playbar">
-    <button id="btnPlay" data-i18n-title="play.title" aria-pressed="false">
+    <button id="btnPlay" data-i18n-title="play.title" title="Space — play / pause" aria-pressed="false">
       <svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.2v9.6l7.6-4.8z" fill="currentColor"/></svg>
       <svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 3h2.6v10H4.5zM8.9 3h2.6v10H8.9z" fill="currentColor"/></svg>
     </button>
