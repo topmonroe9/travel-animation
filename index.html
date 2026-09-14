@@ -4,100 +4,177 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Travel Animation</title>
-<meta name="description" content="Animate a road trip on a real map with a real route and export it to MP4 — free, no keys, runs in the browser.">
+<meta name="description" content="Animate a road trip on a real map with a real route, photos at stops, and export it to MP4 — free, no keys, runs in the browser.">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <aside id="panel">
-  <div class="head">
-    <h1>Travel Animation</h1>
-    <select id="lang" aria-label="Language"><option value="ru">Русский</option><option value="en">English</option></select>
+  <header class="p-head">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M7 25c0-6 6-5.5 9-9.5S13 7 20 7h5" fill="none" stroke="var(--route)" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="7" cy="25" r="3.2" fill="#fff"/><circle cx="25" cy="7" r="3.2" fill="#fff"/>
+      </svg>
+      <div>
+        <h1>Travel Animation</h1>
+        <p class="tagline" data-i18n="app.tagline"></p>
+      </div>
+    </div>
+    <select id="lang" aria-label="Language"><option value="ru">RU</option><option value="en">EN</option></select>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" data-tab="route" data-i18n="tab.route"></button>
+    <button class="tab" role="tab" data-tab="story" data-i18n="tab.story"></button>
+    <button class="tab" role="tab" data-tab="map" data-i18n="tab.map"></button>
+    <button class="tab" role="tab" data-tab="video" data-i18n="tab.video"></button>
+  </nav>
+
+  <div class="p-body">
+    <!-- Маршрут -->
+    <div class="pane" data-pane="route" role="tabpanel">
+      <ol id="points" class="points"></ol>
+      <div class="points-foot">
+        <button id="btnAddPoint" class="add-point"><span class="add-node" aria-hidden="true">+</span><span data-i18n="points.add"></span></button>
+        <button id="btnImport" class="link" data-i18n="points.import"></button>
+      </div>
+      <div id="importBox" class="import" hidden>
+        <textarea id="importText" rows="6" spellcheck="false" data-i18n-placeholder="wp.placeholder"></textarea>
+        <p class="hint" data-i18n-html="wp.hint"></p>
+        <div class="btn-row">
+          <button id="btnImportApply" class="primary" data-i18n="points.importApply"></button>
+          <button id="btnImportCancel" class="ghost" data-i18n="points.importCancel"></button>
+        </div>
+      </div>
+      <div id="routeInfo" class="info"></div>
+
+      <section class="group">
+        <h2 data-i18n="sec.odometer"></h2>
+        <div class="odo">
+          <label class="odo-field">
+            <span data-i18n="odo.start"></span>
+            <input id="kmStart" type="number" min="0" step="1" inputmode="numeric">
+            <em data-i18n="hud.km"></em>
+          </label>
+          <label class="check"><input id="showTotal" type="checkbox"> <span data-i18n="odo.showTotal"></span></label>
+        </div>
+        <p id="odoHint" class="hint"></p>
+      </section>
+    </div>
+
+    <!-- Ролик -->
+    <div class="pane" data-pane="story" role="tabpanel" hidden>
+      <section class="group">
+        <h2 data-i18n="sec.titles"></h2>
+        <label><span data-i18n="title.label"></span> <input id="title" type="text"></label>
+        <label><span data-i18n="subtitle.label"></span> <input id="subtitle" type="text"></label>
+      </section>
+
+      <section class="group">
+        <h2 data-i18n="sec.gallery"></h2>
+        <div class="styles" role="radiogroup">
+          <label class="style-card">
+            <input type="radio" name="galleryStyle" value="stack">
+            <span class="style-art stack" aria-hidden="true"><i></i><i></i><i></i></span>
+            <b data-i18n="gallery.stack"></b><small data-i18n="gallery.stackHint"></small>
+          </label>
+          <label class="style-card">
+            <input type="radio" name="galleryStyle" value="slides">
+            <span class="style-art slides" aria-hidden="true"><i></i><em></em></span>
+            <b data-i18n="gallery.slides"></b><small data-i18n="gallery.slidesHint"></small>
+          </label>
+        </div>
+        <label class="row"><span data-i18n="gallery.time"></span><input id="photoTime" type="range" min="0.8" max="6" step="0.1"><output></output></label>
+        <p class="hint" data-i18n="gallery.hint"></p>
+      </section>
+
+      <section class="group">
+        <h2 data-i18n="sec.timing"></h2>
+        <label class="row"><span data-i18n="timing.drive"></span><input id="drive" type="range" min="5" max="120" step="1"><output></output></label>
+        <label class="row"><span data-i18n="timing.intro"></span><input id="intro" type="range" min="0" max="6" step="0.5"><output></output></label>
+        <label class="row"><span data-i18n="timing.outro"></span><input id="outro" type="range" min="0" max="8" step="0.5"><output></output></label>
+        <label class="row"><span data-i18n="timing.hold"></span><input id="hold" type="range" min="0" max="4" step="0.5"><output></output></label>
+        <p class="total"><span data-i18n="timing.total"></span><b id="durTotal">0:00</b></p>
+      </section>
+    </div>
+
+    <!-- Карта -->
+    <div class="pane" data-pane="map" role="tabpanel" hidden>
+      <section class="group">
+        <h2 data-i18n="sec.camera"></h2>
+        <label><span data-i18n="camera.mode"></span>
+          <select id="mode">
+            <option value="follow" data-i18n="camera.follow"></option>
+            <option value="north" data-i18n="camera.north"></option>
+          </select></label>
+        <label class="row"><span data-i18n="camera.zoom"></span><input id="zoom" type="range" min="4" max="12" step="0.1"><output></output></label>
+        <label class="row"><span data-i18n="camera.pitch"></span><input id="pitch" type="range" min="0" max="72" step="1"><output></output></label>
+        <label class="row"><span data-i18n="camera.offset"></span><input id="carOffset" type="range" min="0" max="0.4" step="0.01"><output></output></label>
+      </section>
+
+      <section class="group">
+        <h2 data-i18n="sec.map"></h2>
+        <label><span data-i18n="map.style"></span>
+          <select id="style">
+            <option value="liberty" data-i18n="style.liberty"></option>
+            <option value="bright" data-i18n="style.bright"></option>
+            <option value="positron" data-i18n="style.positron"></option>
+            <option value="fiord" data-i18n="style.fiord"></option>
+            <option value="dark" data-i18n="style.dark"></option>
+          </select></label>
+        <div class="grid2">
+          <label class="check"><input id="hillshade" type="checkbox"> <span data-i18n="map.hillshade"></span></label>
+          <label class="check"><input id="terrain" type="checkbox"> <span data-i18n="map.terrain"></span></label>
+        </div>
+        <label class="row"><span data-i18n="map.terrainScale"></span><input id="terrainScale" type="range" min="0.5" max="4" step="0.1"><output></output></label>
+        <label class="color-row"><span data-i18n="map.routeColor"></span><input id="routeColor" type="color"></label>
+      </section>
+
+      <section class="group">
+        <h2 data-i18n="sec.car"></h2>
+        <label class="check"><input id="car3d" type="checkbox"> <span data-i18n="map.car3d"></span></label>
+        <label class="color-row"><span data-i18n="map.carColor"></span><input id="carColor" type="color"></label>
+        <label class="row"><span data-i18n="map.carSize"></span><input id="carSize" type="range" min="0.4" max="2" step="0.05"><output></output></label>
+        <label><span data-i18n="map.carFile"></span> <input id="carFile" type="file" accept="image/*"></label>
+      </section>
+    </div>
+
+    <!-- Видео -->
+    <div class="pane" data-pane="video" role="tabpanel" hidden>
+      <section class="group">
+        <h2 data-i18n="video.format"></h2>
+        <div class="formats" role="radiogroup">
+          <label class="fmt"><input type="radio" name="format" value="16:9"><span class="fmt-art" style="--aw:34px;--ah:19px"></span><b>16:9</b><small data-i18n="format.wide"></small></label>
+          <label class="fmt"><input type="radio" name="format" value="9:16"><span class="fmt-art" style="--aw:15px;--ah:27px"></span><b>9:16</b><small data-i18n="format.tall"></small></label>
+          <label class="fmt"><input type="radio" name="format" value="1:1"><span class="fmt-art" style="--aw:23px;--ah:23px"></span><b>1:1</b><small data-i18n="format.square"></small></label>
+        </div>
+        <div class="grid2">
+          <label><span data-i18n="video.quality"></span>
+            <select id="res"><option value="720">720p</option><option value="1080">1080p</option><option value="2160">4K</option></select></label>
+          <label><span data-i18n="video.fps"></span>
+            <select id="fps"><option value="30">30</option><option value="60">60</option></select></label>
+        </div>
+        <label class="row"><span data-i18n="video.bitrate"></span><input id="bitrate" type="range" min="4" max="60" step="1"><output></output></label>
+        <p class="hint" data-i18n="export.hint"></p>
+      </section>
+      <p class="attribution" data-i18n="footer"></p>
+    </div>
   </div>
-  <p class="muted" data-i18n="app.tagline"></p>
 
-  <section>
-    <h2 data-i18n="sec.route"></h2>
-    <label><span data-i18n="wp.label"></span><br>
-      <textarea id="wp" rows="5" spellcheck="false" data-i18n-placeholder="wp.placeholder"></textarea></label>
-    <p class="hint" data-i18n-html="wp.hint"></p>
-    <button id="btnRoute" class="primary" data-i18n="btn.route"></button>
-    <div id="routeInfo" class="info" data-i18n="status.loading"></div>
-  </section>
-
-  <section>
-    <h2 data-i18n="sec.titles"></h2>
-    <label><span data-i18n="title.label"></span> <input id="title" type="text"></label>
-    <label><span data-i18n="subtitle.label"></span> <input id="subtitle" type="text"></label>
-  </section>
-
-  <section>
-    <h2 data-i18n="sec.timing"></h2>
-    <label class="row"><span data-i18n="timing.drive"></span><input id="drive" type="range" min="5" max="120" step="1"><output></output></label>
-    <label class="row"><span data-i18n="timing.intro"></span><input id="intro" type="range" min="0" max="6" step="0.5"><output></output></label>
-    <label class="row"><span data-i18n="timing.outro"></span><input id="outro" type="range" min="0" max="8" step="0.5"><output></output></label>
-    <label class="row"><span data-i18n="timing.hold"></span><input id="hold" type="range" min="0" max="4" step="0.5"><output></output></label>
-  </section>
-
-  <section>
-    <h2 data-i18n="sec.camera"></h2>
-    <label><span data-i18n="camera.mode"></span>
-      <select id="mode">
-        <option value="follow" data-i18n="camera.follow"></option>
-        <option value="north" data-i18n="camera.north"></option>
-      </select></label>
-    <label class="row"><span data-i18n="camera.zoom"></span><input id="zoom" type="range" min="4" max="12" step="0.1"><output></output></label>
-    <label class="row"><span data-i18n="camera.pitch"></span><input id="pitch" type="range" min="0" max="72" step="1"><output></output></label>
-    <label class="row"><span data-i18n="camera.offset"></span><input id="carOffset" type="range" min="0" max="0.4" step="0.01"><output></output></label>
-  </section>
-
-  <section>
-    <h2 data-i18n="sec.map"></h2>
-    <label><span data-i18n="map.style"></span>
-      <select id="style">
-        <option value="liberty" data-i18n="style.liberty"></option>
-        <option value="bright" data-i18n="style.bright"></option>
-        <option value="positron" data-i18n="style.positron"></option>
-        <option value="fiord" data-i18n="style.fiord"></option>
-        <option value="dark" data-i18n="style.dark"></option>
-      </select></label>
-    <div class="grid2">
-      <label class="check"><input id="hillshade" type="checkbox"> <span data-i18n="map.hillshade"></span></label>
-      <label class="check"><input id="terrain" type="checkbox"> <span data-i18n="map.terrain"></span></label>
-    </div>
-    <label class="row"><span data-i18n="map.terrainScale"></span><input id="terrainScale" type="range" min="0.5" max="4" step="0.1"><output></output></label>
-    <div class="grid2">
-      <label><span data-i18n="map.routeColor"></span> <input id="routeColor" type="color"></label>
-      <label><span data-i18n="map.carColor"></span> <input id="carColor" type="color"></label>
-    </div>
-    <label class="check"><input id="car3d" type="checkbox"> <span data-i18n="map.car3d"></span></label>
-    <label class="row"><span data-i18n="map.carSize"></span><input id="carSize" type="range" min="0.4" max="2" step="0.05"><output></output></label>
-    <label><span data-i18n="map.carFile"></span> <input id="carFile" type="file" accept="image/*"></label>
-  </section>
-
-  <section>
-    <h2 data-i18n="sec.video"></h2>
-    <div class="grid3">
-      <label><span data-i18n="video.format"></span>
-        <select id="format"><option value="16:9">16:9</option><option value="9:16">9:16</option><option value="1:1">1:1</option></select></label>
-      <label><span data-i18n="video.quality"></span>
-        <select id="res"><option value="720">720p</option><option value="1080">1080p</option><option value="2160">4K</option></select></label>
-      <label><span data-i18n="video.fps"></span>
-        <select id="fps"><option value="30">30</option><option value="60">60</option></select></label>
-    </div>
-    <label class="row"><span data-i18n="video.bitrate"></span><input id="bitrate" type="range" min="4" max="60" step="1"><output></output></label>
-    <button id="btnExport" class="primary big" data-i18n="btn.export"></button>
+  <footer class="p-foot">
     <div id="exportProgress" hidden>
       <div class="bar"><div id="exportBar"></div></div>
-      <div class="exportRow"><span id="exportText">…</span><button id="btnCancelExport" class="ghost" data-i18n="export.cancel"></button></div>
+      <div class="export-row"><span id="exportText">…</span><button id="btnCancelExport" class="ghost small" data-i18n="export.cancel"></button></div>
     </div>
-    <p class="hint" data-i18n="export.hint"></p>
-  </section>
-
-  <footer class="muted small" data-i18n="footer"></footer>
+    <div class="foot-row">
+      <div class="foot-meta"><b id="footDur">0:00</b><span id="footSize"></span></div>
+      <button id="btnExport" class="primary" data-i18n="btn.export"></button>
+    </div>
+  </footer>
 </aside>
 
 <main id="viewport">
@@ -108,9 +185,15 @@
     </div>
   </div>
   <div id="playbar">
-    <button id="btnPlay" data-i18n-title="play.title">▶</button>
-    <input id="scrub" type="range" min="0" max="1" step="0.01" value="0">
-    <span id="timeLabel">0.0 / 0.0</span>
+    <button id="btnPlay" data-i18n-title="play.title" aria-pressed="false">
+      <svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.2v9.6l7.6-4.8z" fill="currentColor"/></svg>
+      <svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 3h2.6v10H4.5zM8.9 3h2.6v10H8.9z" fill="currentColor"/></svg>
+    </button>
+    <div class="scrub-wrap">
+      <div id="marks"></div>
+      <input id="scrub" type="range" min="0" max="1" step="0.01" value="0">
+    </div>
+    <span id="timeLabel">0:00 / 0:00</span>
   </div>
 </main>
 

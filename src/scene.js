@@ -18,12 +18,11 @@ function deferred() {
 }
 
 // Флажок остановки: точка привязки — основание ножки (в CSS-пикселях от левого нижнего угла картинки).
+// Значок без подписи привязан серединой низа.
 const FLAG_BASE_X = 8;
 const FLAG_BASE_Y = 6;
-const FLAG_EXTRA = {
-  start: { emoji: '🚩', color: '#22c55e' },
-  finish: { emoji: '🏁', color: '#111827' },
-};
+export const BADGE_STEM = 44;
+const EMOJI_FONT = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
 
 const EMPTY_LINE = { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [] } };
 const EMPTY_FC = { type: 'FeatureCollection', features: [] };
@@ -199,11 +198,13 @@ export class Scene {
       paint: { 'line-color': this.opts.routeColor, 'line-width': 5 },
     }, firstSymbol);
 
+    const isBadge = ['==', ['get', 'marker'], 'badge'];
     map.addLayer({
       id: 'stop-icon', type: 'symbol', source: 'stops', filter: ['>', ['get', 'scale'], 0],
       layout: {
         'icon-image': ['get', 'icon'], 'icon-size': ['get', 'scale'],
-        'icon-anchor': 'bottom-left', 'icon-offset': [-FLAG_BASE_X, FLAG_BASE_Y],
+        'icon-anchor': ['case', isBadge, 'bottom', 'bottom-left'],
+        'icon-offset': ['case', isBadge, ['literal', [0, 7]], ['literal', [-FLAG_BASE_X, FLAG_BASE_Y]]],
         'icon-allow-overlap': true, 'icon-ignore-placement': true,
       },
     });
@@ -226,13 +227,15 @@ export class Scene {
   }
 
   /**
-   * Флажок остановки: ножка с основанием на точке и табличка с эмодзи и названием.
+   * Маркер остановки: флажок (ножка на точке, табличка с эмодзи и названием) или круглый значок.
    * Возвращает имя картинки в стиле карты, создаёт её при первом обращении.
    */
   _flagImage(stop) {
-    const name = 'flag-' + stop.type + '-' + stop.name;
+    const base = STOP_TYPES[stop.type] || STOP_TYPES.place;
+    const t = { emoji: stop.emoji || base.emoji, color: stop.color || base.color };
+    const name = ['flag', stop.marker || 'flag', t.emoji, t.color, stop.name].join('|');
     if (this.map.hasImage(name)) return name;
-    const t = STOP_TYPES[stop.type] || FLAG_EXTRA[stop.type] || FLAG_EXTRA.finish;
+    if (stop.marker === 'badge') return this._badgeImage(name, t);
     const S = 2;
     const c = document.createElement('canvas');
     const ctx = c.getContext('2d');
@@ -267,7 +270,7 @@ export class Scene {
     ctx.stroke();
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
-    ctx.font = `${17 * S}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
+    ctx.font = `${17 * S}px ${EMOJI_FONT}`;
     ctx.fillText(t.emoji, poleX + padX, bannerY + bannerH / 2 + 1 * S);
     ctx.font = nameFont;
     ctx.fillStyle = '#111827';
@@ -284,10 +287,55 @@ export class Scene {
     return name;
   }
 
+  /** Круглый значок с эмодзи на тонкой ножке (чтобы не прятался под машиной), основание — середина низа. */
+  _badgeImage(name, t) {
+    const S = 2, R = 17 * S, ring = 3 * S, tail = 9 * S, margin = 6 * S, stem = BADGE_STEM * S, base = 5 * S;
+    const c = document.createElement('canvas');
+    c.width = 2 * (R + margin);
+    c.height = margin + 2 * R + stem + base + 2 * S;
+    const ctx = c.getContext('2d');
+    const cx = c.width / 2, cy = margin + R;
+    const baseY = c.height - base - 2 * S;
+    ctx.fillStyle = '#1f2937';
+    ctx.fillRect(cx - 1.5 * S, cy + R, 3 * S, baseY - cy - R);
+    ctx.beginPath();
+    ctx.arc(cx, baseY, 4.5 * S, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+    ctx.lineWidth = 2.5 * S;
+    ctx.strokeStyle = t.color;
+    ctx.stroke();
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,.35)';
+    ctx.shadowBlur = 5 * S;
+    ctx.shadowOffsetY = 2 * S;
+    ctx.fillStyle = t.color;
+    ctx.beginPath();
+    ctx.moveTo(cx - 7 * S, cy + R - 4 * S);
+    ctx.lineTo(cx, cy + R + tail);
+    ctx.lineTo(cx + 7 * S, cy + R - 4 * S);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    ctx.beginPath();
+    ctx.arc(cx, cy, R - ring, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `${18 * S}px ${EMOJI_FONT}`;
+    ctx.fillText(t.emoji, cx, cy + 1 * S);
+    this.map.addImage(name, ctx.getImageData(0, 0, c.width, c.height), { pixelRatio: S });
+    return name;
+  }
+
   /** Сбросить кеш флажков (после загрузки шрифтов или смены маршрута). */
   resetFlags() {
     const imgs = this.map.listImages ? this.map.listImages() : [];
-    for (const id of imgs) if (id.startsWith('flag-')) this.map.removeImage(id);
+    for (const id of imgs) if (id.startsWith('flag|')) this.map.removeImage(id);
     this._lastStopsKey = '';
   }
 
@@ -384,7 +432,7 @@ export class Scene {
   }
 
   /**
-   * Применить кадр. stops: [{name, lngLat, scale}] — scale 0 скрывает остановку.
+   * Применить кадр. stops: [{name, lngLat, type, marker, emoji, color, scale}] — scale 0 скрывает остановку.
    */
   update(cam, d, car, carBearing, stops) {
     const map = this.map;
@@ -401,13 +449,14 @@ export class Scene {
       type: 'FeatureCollection',
       features: [{ type: 'Feature', properties: { bearing: carBearing }, geometry: { type: 'Point', coordinates: car } }],
     });
-    const key = stops.map((s) => s.scale.toFixed(3) + s.type + s.name).join(',');
+    const shown = stops.filter((s) => s.marker !== 'hidden');
+    const key = shown.map((s) => [s.scale.toFixed(3), s.type, s.name, s.marker, s.emoji, s.color, s.lngLat].join(':')).join(',');
     if (key !== this._lastStopsKey) {
       map.getSource('stops').setData({
         type: 'FeatureCollection',
-        features: stops.map((s) => ({
+        features: shown.map((s) => ({
           type: 'Feature',
-          properties: { name: s.name, scale: s.scale, icon: this._flagImage(s) },
+          properties: { name: s.name, scale: s.scale, marker: s.marker || 'flag', icon: this._flagImage(s) },
           geometry: { type: 'Point', coordinates: s.lngLat },
         })),
       });

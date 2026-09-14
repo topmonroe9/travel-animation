@@ -2,6 +2,7 @@
 // Рисуется на 2D-канвасе размером с выходное видео — превью и экспорт идентичны.
 
 import { t, locale } from './i18n.js';
+import { drawGallery, drawGalleryBackdrop } from './gallery.js';
 
 const FONT = 'Inter, -apple-system, "Segoe UI", Roboto, sans-serif';
 const MONO = '"JetBrains Mono", ui-monospace, Menlo, monospace';
@@ -18,18 +19,22 @@ function roundRect(ctx, x, y, w, h, r) {
 
 /**
  * @param {CanvasRenderingContext2D} ctx
- * @param {{title:string, subtitle:string, km:number, totalKm:number, progress:number,
- *          stops:{frac:number, visible:boolean}[], color:string}} o
+ * @param {{title:string, subtitle:string, km:number, totalKm:number, kmStart:number, showTotal:boolean,
+ *          progress:number, stops:{frac:number, visible:boolean, color:string}[], color:string,
+ *          gallery:object|null, galleryPresence:number}} o
  */
 export function drawHud(ctx, W, H, o) {
   ctx.clearRect(0, 0, W, H);
   const u = Math.min(W, H) / 1080; // масштаб типографики
   const pad = 56 * u;
+  const presence = o.galleryPresence || 0;
+  drawGalleryBackdrop(ctx, W, H, presence);
   ctx.textBaseline = 'top';
   ctx.textAlign = 'left';
 
-  // Заголовок
+  // Заголовок (пока показывается галерея, уходит, чтобы не спорить с фото)
   ctx.save();
+  ctx.globalAlpha = 1 - presence;
   ctx.shadowColor = 'rgba(0,0,0,.55)';
   ctx.shadowBlur = 20 * u;
   ctx.shadowOffsetY = 2 * u;
@@ -45,12 +50,13 @@ export function drawHud(ctx, W, H, o) {
 
   // Счётчик километров
   const fmt = new Intl.NumberFormat(locale());
-  const kmStr = fmt.format(Math.round(o.km));
-  const totalStr = fmt.format(Math.round(o.totalKm));
+  const start = +o.kmStart || 0;
+  const kmStr = fmt.format(Math.round(start + o.km));
+  const totalStr = fmt.format(Math.round(start + o.totalKm));
   ctx.font = `700 ${Math.round(44 * u)}px ${MONO}`;
   const wNum = ctx.measureText(kmStr).width;
   ctx.font = `500 ${Math.round(22 * u)}px ${FONT}`;
-  const tail = ` ${t('hud.km')}  ·  ${t('hud.of')} ${totalStr}`;
+  const tail = o.showTotal === false ? ` ${t('hud.km')}` : ` ${t('hud.km')}  ·  ${t('hud.of')} ${totalStr}`;
   const wTail = ctx.measureText(tail).width;
   const ph = 84 * u, px = 28 * u;
   const pw = wNum + wTail + px * 2 + 8 * u;
@@ -95,4 +101,6 @@ export function drawHud(ctx, W, H, o) {
   ctx.font = `500 ${Math.round(15 * u)}px ${FONT}`;
   ctx.fillText('© OpenStreetMap contributors · OpenFreeMap · OSRM', W - pad * 0.5, H - bh - 10 * u);
   ctx.restore();
+
+  if (o.gallery) drawGallery(ctx, W, H, o.gallery);
 }

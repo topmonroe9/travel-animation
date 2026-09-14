@@ -133,16 +133,21 @@ export class Polyline {
 
   /** Километраж ближайшей вершины к точке (проекция остановки на маршрут). */
   project(pt) {
+    return this.projectFrom(pt, 0).d;
+  }
+
+  /** Ближайшая к точке вершина, начиная с индекса from: { i, d }. */
+  projectFrom(pt, from = 0) {
     const c = this.coords;
     const k = Math.cos(rad(pt[1]));
-    let best = 0, bd = Infinity;
-    for (let i = 0; i < c.length; i++) {
+    let best = from, bd = Infinity;
+    for (let i = from; i < c.length; i++) {
       const dx = (c[i][0] - pt[0]) * k;
       const dy = c[i][1] - pt[1];
       const dd = dx * dx + dy * dy;
       if (dd < bd) { bd = dd; best = i; }
     }
-    return this.cum[best];
+    return { i: best, d: this.cum[best] };
   }
 }
 

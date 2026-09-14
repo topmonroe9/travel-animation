@@ -25,29 +25,38 @@ The interface follows the browser language (Russian or English) and can be switc
 
 ## Usage
 
-1. **Waypoints** — one per line. The first and last are start and finish; the rest are stops the route
-   passes through:
-   ```
-   Munich
-   Innsbruck #fuel
-   Verona #sleep ~3
-   Cabin @ 46.49, 11.33 #rest
-   Venice
-   ```
-   - `#type` — stop marker: `fuel`, `rest`, `food`, `sleep`, `photo`, `place` (Russian keywords work too).
-   - `~seconds` — how long the car waits at this stop (otherwise the global "Pause at stops" applies).
-   - `@ lat, lng` — exact coordinates instead of geocoding (the order Google/Yandex Maps use).
-2. **Build route** — Nominatim geocodes the points, OSRM routes along roads. The result is cached in
-   localStorage. A sample route (Munich → Innsbruck → Venice, `routes/sample.json`) ships with the app
-   and loads without the network.
-3. **Captions, timing, camera, map** — every control updates the preview instantly. Space or a click on
-   the frame plays the animation.
-4. **Export MP4** — frame-by-frame rendering inside this tab; the file lands in Downloads.
-   Keep the tab visible: browsers stop rendering background tabs.
+The panel has four tabs: **Route**, **Video story**, **Map** and **Export**. The export button and the
+video length stay at the bottom.
 
-In the frame: title and subtitle, a running kilometre counter, a progress bar with stop ticks, a dashed
-line for the road ahead, the travelled path with a glow, stop flags (a pole on the point with a label
-showing the emoji and the name) that pop up next to the car as it arrives, the car itself as a flat
+1. **Stops** are a route diagram: each stop is its own row, with road distances between them. Type a city
+   or an address and press Enter: Nominatim finds it and OSRM rebuilds the road route (results are cached
+   in localStorage). Drag a row by its handle to reorder. The first stop is the start and the last one is
+   the finish, unless you pick another type.
+2. **Stop menu** (the chevron or the round icon):
+   - type: start, finish, fuel, rest, food, overnight, photo, sight, nature, sea, home, place;
+   - how it looks on the map: a flag with a label, a round badge on a stem, or hidden (the point only
+     shapes the route); a custom label, emoji and color;
+   - photos: drop files onto the stop or press “Add”, drag thumbnails to reorder or move them to another
+     stop. HEIC from iPhone is converted in the browser. Photos are downscaled to 2400 px and kept in
+     IndexedDB, so they survive a reload;
+   - how long the car waits, and exact coordinates instead of geocoding.
+3. **Paste as a list** keeps the old text format for quick input:
+   `Innsbruck #fuel`, `Verona #sleep ~3`, `Cabin @ 46.49, 11.33`. Photos and styling of stops with the
+   same name are kept.
+4. **Odometer**: “Start at” sets the initial reading — for the second part of a trip the counter can run
+   from 2,500 instead of zero. “of N km” can be hidden.
+5. **Video story**: captions, the gallery style (polaroids dropping into a pile, or slides with a
+   crossfade), seconds per photo, timing. “Driving” is pure motion time; stops and galleries add to it.
+6. **Export MP4**: pick 16:9, 9:16 (Reels, Shorts, TikTok) or 1:1 and the quality. Rendering is frame by
+   frame inside this tab; keep it visible, because browsers stop rendering background tabs.
+
+Space or a click on the frame plays the preview. Stop markers on the scrubber jump to the stop, and a
+stop menu has a “Play” button that plays the approach and the gallery.
+
+In the frame: title and subtitle, a running kilometre counter (from any starting value), a progress bar
+with stop ticks, a dashed line for the road ahead, the travelled path with a glow, stop flags or badges
+that pop up next to the car as it arrives, a photo gallery at a stop (the car slows down, the photos fly
+out of the flag, flip and fly back, then the car drives on), the car itself as a flat
 top-down SVG icon, a low-poly 3D model rendered with three.js (hatchback with roof rails and a roof box)
 or your own PNG, hillshade and 3D terrain with adjustable exaggeration, and a sky at the horizon when
 the camera is pitched.
@@ -55,12 +64,12 @@ the camera is pitched.
 ## Architecture
 
 ```
-Waypoints (text) ──▶ Nominatim (geocoding) ──▶ OSRM demo (road route, GeoJSON)
+Stops (list) ──────▶ Nominatim (geocoding) ──▶ OSRM demo (road route, GeoJSON)
                                                         │
                                                         ▼
                                   Polyline: cumulative km, point/bearing at d, slice 0…d
                                                         │
- Timeline t ──▶ intro → drive (trapezoid speed profile + holds at stops) → outro
+ Timeline t ──▶ intro → drive (segments between stops, braking + holds / galleries) → outro
                                                         │
                                                         ▼
                      Camera: centre shifted ahead, zoom, smoothed bearing, pitch
@@ -70,7 +79,7 @@ Waypoints (text) ──▶ Nominatim (geocoding) ──▶ OSRM demo (road route
         layers: hillshade / terrain / sky · route ahead · travelled (glow+casing+line)
                · stop flags · car (SVG symbol | three.js custom layer)
                                                         │
-                                   HUD (canvas 2D): captions, km, progress, attribution
+                     HUD (canvas 2D): captions, km, progress, photo gallery, attribution
                                                         │
    export: for t in frames → jumpTo/setData → wait for idle → composite(map+hud) → VideoFrame
            → VideoEncoder (H.264, WebCodecs) → mp4-muxer → Blob → download .mp4
@@ -83,8 +92,11 @@ loaded because the exporter waits for the map's `idle` event before grabbing a f
 | Module | Responsibility |
 | --- | --- |
 | `src/geo.js` | haversine, bearing, destination, Mercator, `Polyline` with binary search by distance, camera bearing smoothing |
-| `src/route.js` | waypoint parser, Nominatim, OSRM, cache, stop types |
-| `src/timeline.js` | phases, speed profile, holds, camera for a given state |
+| `src/route.js` | stop types, text list parser, Nominatim, OSRM, cache, stop positions along the route |
+| `src/timeline.js` | phases, segments between stops with acceleration and braking, holds, camera for a given state |
+| `src/points-ui.js` | stop editor: route diagram, stop menu, dragging stops and photos |
+| `src/photos.js` | photo import (downscaling, HEIC via heic2any), IndexedDB storage |
+| `src/gallery.js` | the gallery at a stop: polaroids and slides |
 | `src/scene.js` | MapLibre: style, label language, terrain, route/stop/car layers, waiting for `idle` |
 | `src/car3d.js` | three.js custom layer; the hatchback is built from extruded side profiles (`buildCar`), roof box and rails included |
 | `src/hud.js` | 2D canvas overlay |
@@ -118,7 +130,8 @@ loaded because the exporter waits for the map's `idle` event before grabbing a f
   then point the `OSRM` constant in `src/route.js` at `http://127.0.0.1:5000/route/v1/driving/`.
 - **Nominatim** — geocoding, at most 1 request per second; responses are cached in localStorage.
 - **AWS Terrain Tiles** (Mapzen terrarium) — open elevation data for hillshade and 3D terrain.
-- **Google Fonts** (Inter, JetBrains Mono) — captions; falls back to system fonts offline.
+- **Google Fonts** (Inter, JetBrains Mono, Caveat for polaroid captions) — falls back to system fonts offline.
+- **heic2any** (jsDelivr) — loaded only when a HEIC photo cannot be decoded by the browser.
 - Map data © OpenStreetMap contributors (ODbL): the attribution is drawn into the frame, keep it.
 
 ## Export performance
@@ -129,7 +142,7 @@ slower and deserves a 40–60 Mbit/s bitrate. The file is assembled in memory: e
 
 ## Ideas
 
-- Photos at stops (cards in the HUD), multi-day trips with dates.
+- Multi-day trips with dates, phone videos in the gallery.
 - Manual camera keyframes (linger on a mountain pass).
 - Flight / train segments drawn as arcs instead of roads.
 - Load a glTF car with `GLTFLoader` instead of the procedural one (replace `buildCar` in `src/car3d.js`).
