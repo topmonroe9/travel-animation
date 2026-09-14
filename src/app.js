@@ -7,7 +7,7 @@ import {
 import { Timeline, cameraAt, easeOutBack } from './timeline.js';
 import { Scene, STYLES, BADGE_STEM } from './scene.js';
 import { drawHud } from './hud.js';
-import { galleryDuration, galleryPresence, GALLERY_STYLES } from './gallery.js';
+import { galleryDuration, galleryPerPhoto, galleryPresence, GALLERY_STYLES } from './gallery.js';
 import { exportVideo, downloadBlob } from './exporter.js';
 import * as Photos from './photos.js';
 import { PointsEditor, newId } from './points-ui.js';
@@ -26,7 +26,7 @@ function normalizePoint(p) {
   return {
     id: p.id || newId(), name: p.name || '', lngLat: p.lngLat || null, manual: !!p.manual, found: p.found || '',
     type: p.type || null, marker: p.marker || 'flag', label: p.label || '', color: p.color || '', emoji: p.emoji || '',
-    hold: p.hold ?? null, photos: Array.isArray(p.photos) ? p.photos : [],
+    hold: p.hold ?? null, galleryTime: p.galleryTime ?? null, photos: Array.isArray(p.photos) ? p.photos : [],
   };
 }
 const defaultPoints = (l = lang) => SAMPLE_KEYS.map((k, i) => normalizePoint({ name: tIn(l, k), lngLat: SAMPLE_COORDS[i], type: i === 1 ? 'rest' : null }));
@@ -39,7 +39,7 @@ const DEFAULTS = {
   mode: 'follow', zoom: 7.5, pitch: 60, carOffset: 0.2, introZoomIn: 2.5, holdZoomIn: 0.8,
   style: 'liberty', hillshade: true, terrain: true, terrainScale: 2,
   routeColor: '#ff3b30', carColor: '#1f2f6e', carSize: 0.9, car3d: true, bitrate: 12,
-  kmStart: 0, showTotal: true, galleryStyle: 'stack', photoTime: 2.2,
+  kmStart: 0, showTotal: true, galleryStyle: 'stack', photoTime: 2.2, photoSize: 90,
 };
 const FORMATS = { '16:9': [16, 9], '9:16': [9, 16], '1:1': [1, 1] };
 
@@ -69,9 +69,15 @@ saveCfg();
 const activePoints = () => cfg.points.filter(isActivePoint);
 const allPhotoIds = () => cfg.points.flatMap((p) => p.photos);
 
+/** Секунд на фото в точке: из длительности её галереи, если задана, иначе общая настройка. */
+function perPhotoFor(p) {
+  const n = p.photos.length;
+  return p.galleryTime != null && Number.isFinite(+p.galleryTime) ? galleryPerPhoto(n, +p.galleryTime) : +cfg.photoTime;
+}
+
 /** Сколько машина стоит в точке: галерея, если есть фото, иначе заданная или общая пауза. */
 function holdFor(p, i, n) {
-  if (p.photos.length) return galleryDuration(p.photos.length, +cfg.photoTime);
+  if (p.photos.length) return galleryDuration(p.photos.length, perPhotoFor(p));
   if (p.hold != null && Number.isFinite(+p.hold)) return Math.max(0, +p.hold);
   return i > 0 && i < n - 1 && p.marker !== 'hidden' ? +cfg.hold : 0;
 }
@@ -170,7 +176,7 @@ function refreshStops(keepTime = true) {
       id: a.id, lngLat: a.lngLat, d: a.d, type,
       name: (p.label || p.name).trim() || '·',
       marker: p.marker || 'flag', color: p.color || T.color, emoji: p.emoji || T.emoji,
-      photos: [...p.photos], hold: holdFor(p, i, n), seed: seedOf(a.id),
+      photos: [...p.photos], hold: holdFor(p, i, n), perPhoto: perPhotoFor(p), seed: seedOf(a.id),
     };
   });
   timeline = new Timeline(trip.line.length, trip.stops, { intro: +cfg.intro, drive: +cfg.drive, outro: +cfg.outro });
@@ -287,14 +293,14 @@ function render(time) {
   const s = st.holdIdx >= 0 ? trip.stops[st.holdIdx] : null;
   const photos = s ? s.photos.map((id) => Photos.get(id)).filter(Boolean) : [];
   if (photos.length) {
-    const per = +cfg.photoTime;
+    const per = s.perPhoto;
     presence = galleryPresence(st.holdTime, photos.length, per);
     // Галерея вылетает из таблички флажка (или из значка).
     const pt = scene.map.project(s.lngLat);
     const off = s.marker === 'badge' ? [0, -BADGE_STEM - 17] : s.marker === 'hidden' ? [0, 0] : [44, -62];
     const k = size.W / size.cssW;
     gallery = {
-      photos, s: st.holdTime, perPhoto: per, style: cfg.galleryStyle,
+      photos, s: st.holdTime, perPhoto: per, style: cfg.galleryStyle, size: clamp(+cfg.photoSize || 90, 30, 100) / 100,
       name: s.name, emoji: s.emoji, color: s.color, seed: s.seed,
       anchor: [(pt.x + off[0]) * k, (pt.y + off[1]) * k],
     };
@@ -356,7 +362,7 @@ function focusPoint(id, how) {
     setTime(Math.max(0, arrive - 2.5));
     togglePlay();
   } else if (hold && trip.stops[i].photos.length) {
-    setTime(hold.t0 + Math.min(hold.dur / 2, 1.3 + +cfg.photoTime / 2));
+    setTime(hold.t0 + Math.min(hold.dur / 2, 1.3 + trip.stops[i].perPhoto / 2));
   } else {
     setTime(hold ? hold.t0 + hold.dur / 2 : arrive + 0.7);
   }
@@ -468,7 +474,11 @@ let liveTimer = 0;
 const editor = new PointsEditor({
   list: $('#points'),
   getPoints: () => cfg.points,
-  holdHint: (p, i, n) => (i < 0 ? holdFor(p, 1, 3) : holdFor(p, i, n)),
+  timing: (p, i, n) => ({
+    hold: i < 0 ? holdFor(p, 1, 3) : holdFor(p, i, n),
+    perPhoto: perPhotoFor(p),
+    autoGallery: galleryDuration(p.photos.length, +cfg.photoTime),
+  }),
   onFocus: focusPoint,
   onChange: (kind) => {
     saveCfg();
@@ -519,6 +529,7 @@ bind('bitrate', 'bitrate');
 bind('kmStart', 'kmStart', () => { updateOdoHint(); rerender(); });
 bind('showTotal', 'showTotal', rerender);
 bindRadio('galleryStyle', 'galleryStyle', rerender);
+bind('photoSize', 'photoSize', rerender);
 bind('photoTime', 'photoTime', () => { refreshStops(); editor.render(); });
 for (const k of ['drive', 'intro', 'outro', 'hold']) bind(k, k, () => refreshStops());
 for (const k of ['mode', 'zoom', 'pitch', 'carOffset']) bind(k, k, rerender);

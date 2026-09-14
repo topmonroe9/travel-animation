@@ -24,7 +24,7 @@ const ICON = {
 
 export class PointsEditor {
   /**
-   * @param {{list:HTMLElement, getPoints:()=>object[], holdHint:(p,i,n)=>number,
+   * @param {{list:HTMLElement, getPoints:()=>object[], timing:(p,i,n)=>{hold:number, perPhoto:number, autoGallery:number},
    *          onChange:(kind:'geo'|'meta'|'live'|'photos')=>void, onFocus:(id:string, how:string)=>void}} o
    */
   constructor(o) {
@@ -89,7 +89,7 @@ export class PointsEditor {
         <button class="pt-node" data-act="toggle" title="${esc(t('pt.menu'))}" aria-expanded="${open}"><span>${esc(emoji)}</span></button>
         <input class="pt-name" data-field="name" value="${esc(p.name)}" placeholder="${esc(t('points.namePh'))}" spellcheck="false" autocomplete="off" enterkeyhint="done">
         ${this.stateHtml(p, i)}
-        ${photos ? `<button class="pt-chip" data-act="photos" title="${esc(t('pt.photosTime', { n: photos, s: this.holdHint(p, i, n).toFixed(1) }))}">${ICON.camera}<span>${photos}</span></button>` : ''}
+        ${photos ? `<button class="pt-chip" data-act="photos" title="${esc(t('pt.photosTime', { n: photos, s: this.timing(p, i, n).hold.toFixed(1) }))}">${ICON.camera}<span>${photos}</span></button>` : ''}
         <button class="pt-more" data-act="toggle" aria-expanded="${open}" aria-label="${esc(t('pt.menu'))}">${ICON.chevron}</button>
         <span class="pt-grip" title="${esc(t('pt.grip'))}">${ICON.grip}</span>
       </div>
@@ -117,7 +117,9 @@ export class PointsEditor {
     const marker = p.marker || 'flag';
     const nPhotos = p.photos.length;
     const coords = p.lngLat ? `${+p.lngLat[1].toFixed(5)}, ${+p.lngLat[0].toFixed(5)}` : '';
-    const auto = this.holdHint(p, i, n);
+    const timing = this.timing(p, i, n);
+    const auto = timing.hold;
+    const sec = (x) => +x.toFixed(1);
     const custom = p.color && !SWATCHES.includes(p.color);
     const types = TYPE_ORDER.map((id) => {
       const it = STOP_TYPES[id];
@@ -158,6 +160,10 @@ export class PointsEditor {
           <label class="ph-add${busy ? ' busy' : ''}">${ICON.plus}<span>${esc(t('pt.photosAdd'))}</span><input type="file" accept="image/*,.heic,.heif" multiple data-field="files" hidden></label>
         </div>
         <p class="hint${err ? ' error' : ''}">${esc(busy || err || t('pt.photosHint'))}</p>
+        ${nPhotos ? `<div class="gal-time">
+          <label class="mini"><span>${esc(t('pt.galleryTime'))}</span><input type="number" min="0" max="600" step="0.5" data-field="galleryTime" value="${esc(p.galleryTime ?? '')}" placeholder="${sec(timing.autoGallery)}"></label>
+          <span class="gal-per">${esc(t('pt.perPhoto', { s: sec(timing.perPhoto) }))}</span>
+        </div>` : ''}
       </div>
       <div class="fld two">
         <label class="mini"><span>${esc(t('pt.hold'))}</span><input type="number" min="0" max="120" step="0.5" data-field="hold" value="${nPhotos ? '' : esc(p.hold ?? '')}" placeholder="${nPhotos ? esc(t('pt.holdPhotos')) : +auto.toFixed(1)}"${nPhotos ? ' disabled' : ''}></label>
@@ -316,6 +322,10 @@ export class PointsEditor {
         this.onChange('live');
       }
       if (f === 'coords') el.classList.remove('bad');
+      if (f === 'galleryTime') {
+        const draft = { ...p, galleryTime: el.value === '' ? null : Math.max(0, +el.value) };
+        el.closest('.gal-time').querySelector('.gal-per').textContent = t('pt.perPhoto', { s: +this.timing(draft, 0, 3).perPhoto.toFixed(1) });
+      }
     });
 
     L.addEventListener('change', (e) => {
@@ -344,6 +354,10 @@ export class PointsEditor {
         this.status.delete(id);
         this.renderSoon();
         this.onChange('geo');
+      } else if (f === 'galleryTime') {
+        p.galleryTime = el.value === '' ? null : Math.max(0, +el.value);
+        this.renderSoon();
+        this.onChange('meta');
       } else if (f === 'hold') {
         p.hold = el.value === '' ? null : Math.max(0, +el.value);
         this.renderSoon();

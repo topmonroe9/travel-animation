@@ -7,9 +7,16 @@ export const GALLERY_STYLES = ['stack', 'slides'];
 
 // Секунды: машина остановилась → карточка вылетает → фото по очереди → улетает → машина трогается.
 const LEAD = 0.35, ENTER = 0.6, EXIT = 0.55, TAIL = 0.3;
+const OVERHEAD = LEAD + ENTER + EXIT + TAIL;
+export const MIN_PER_PHOTO = 0.2;
 
 export function galleryDuration(n, perPhoto) {
-  return n > 0 ? LEAD + ENTER + n * perPhoto + EXIT + TAIL : 0;
+  return n > 0 ? OVERHEAD + n * perPhoto : 0;
+}
+
+/** Секунд на фото, чтобы вся галерея из n фото уложилась в total секунд (с вылетом и возвратом). */
+export function galleryPerPhoto(n, total) {
+  return Math.max(MIN_PER_PHOTO, (total - OVERHEAD) / Math.max(1, n));
 }
 
 /** Насколько галерея на экране в момент s (0…1) — для затемнения карты и титров. */
@@ -47,12 +54,11 @@ function fit(aspect, boxW, boxH) {
   return boxW / boxH > aspect ? [boxH * aspect, boxH] : [boxW, boxW / aspect];
 }
 
-/** Область под карточку в зависимости от формата кадра. */
-function layout(W, H) {
+/** Область под карточку в зависимости от формата кадра; size 1 — почти весь кадр. */
+function layout(W, H, size = 0.9) {
   const a = W / H;
-  if (a > 1.2) return { cx: W / 2, cy: H * 0.475, boxW: W * 0.6, boxH: H * 0.7 };
-  if (a < 0.8) return { cx: W / 2, cy: H * 0.46, boxW: W * 0.84, boxH: H * 0.56 };
-  return { cx: W / 2, cy: H * 0.48, boxW: W * 0.74, boxH: H * 0.64 };
+  const [kw, kh, cy] = a > 1.2 ? [0.92, 0.9, 0.49] : a < 0.8 ? [0.96, 0.8, 0.47] : [0.94, 0.9, 0.49];
+  return { cx: W / 2, cy: H * cy, boxW: W * kw * size, boxH: H * kh * size };
 }
 
 /** Затемнение карты под галереей (рисуется до титров). */
@@ -67,7 +73,7 @@ export function drawGalleryBackdrop(ctx, W, H, presence) {
 
 /**
  * @param {{photos:{bmp:ImageBitmap,w:number,h:number}[], s:number, perPhoto:number, style:string,
- *          name:string, emoji:string, color:string, anchor:[number,number]|null, seed:number}} g
+ *          name:string, emoji:string, color:string, anchor:[number,number]|null, seed:number, size:number}} g
  */
 export function drawGallery(ctx, W, H, g) {
   const n = g.photos.length;
@@ -80,7 +86,7 @@ export function drawGallery(ctx, W, H, g) {
   if (enter <= 0 || exit >= 1) return;
 
   const u = Math.min(W, H) / 1080;
-  const L = layout(W, H);
+  const L = layout(W, H, g.size);
   const anchor = g.anchor || [L.cx, H * 0.7];
   // Общий полёт: из флажка в центр и обратно.
   const fly = exit > 0 ? 1 - easeInCubic(exit) : easeOutCubic(enter);
@@ -102,7 +108,7 @@ export function drawGallery(ctx, W, H, g) {
 function polaroidSize(img, L) {
   const a = img.w / img.h;
   // внешняя ширина OW: поля 5% по бокам и сверху, подпись снизу 17%
-  const OW = Math.min(L.boxW * 0.9, L.boxH / (0.05 + 0.9 / a + 0.17));
+  const OW = Math.min(L.boxW * 0.94, L.boxH / (0.05 + 0.9 / a + 0.17));
   const b = OW * 0.05;
   const pw = OW - 2 * b;
   const ph = pw / a;
@@ -156,11 +162,11 @@ function drawStack(ctx, W, H, u, L, g, idx, slotT) {
     const dy = (rand(g.seed + 2, k) * 2 - 1) * L.boxH * 0.035;
     let sc = 1, extraRot = 0, a = 1;
     if (k === idx && k > 0) {
-      // новое фото падает сверху на стопку
-      const d = easeOutCubic(clamp(slotT / 0.55, 0, 1));
+      // новое фото падает сверху на стопку; при быстром листании падение короче
+      const d = easeOutCubic(clamp(slotT / Math.min(0.55, g.perPhoto * 0.7), 0, 1));
       sc = lerp(1.3, 1, d);
       extraRot = (1 - d) * (rand(g.seed + 3, k) > 0.5 ? 1 : -1) * 0.18;
-      a = clamp(slotT / 0.16, 0, 1);
+      a = clamp(slotT / Math.min(0.16, g.perPhoto * 0.3), 0, 1);
     }
     ctx.save();
     ctx.globalAlpha *= a;
@@ -240,12 +246,18 @@ function drawSlides(ctx, W, H, u, L, g, idx, slotT) {
   ctx.fillStyle = '#fff';
   ctx.fillText(label, chipX + 30 * u, chipY + chipH / 2 + 1 * u, w - 110 * u);
 
-  // точки-индикатор под карточкой
+  // точки-индикатор под карточкой, а если снизу нет места — на самой карточке
   if (n > 1) {
-    const y = top + h + 42 * u;
+    const below = L.cy + top + h + 64 * u < H - 20 * u;
+    const y = below ? top + h + 42 * u : top + h - 38 * u;
     if (n <= 14) {
       const dot = 14 * u, gap = 11 * u, wide = 44 * u;
       const total = n * dot + (n - 1) * gap + (wide - dot);
+      if (!below) {
+        ctx.fillStyle = 'rgba(12,14,20,.55)';
+        roundRectPath(ctx, -total / 2 - 16 * u, y - dot / 2 - 10 * u, total + 32 * u, dot + 20 * u, dot / 2 + 10 * u);
+        ctx.fill();
+      }
       let x = -total / 2;
       for (let k = 0; k < n; k++) {
         const active = k === idx ? m : k === idx - 1 ? 1 - m : 0;

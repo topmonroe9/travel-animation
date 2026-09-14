@@ -48,6 +48,9 @@ export function drawHud(ctx, W, H, o) {
   }
   ctx.restore();
 
+  // Галерея фото — под счётчиком и прогрессом, чтобы крупные снимки их не закрывали
+  if (o.gallery) drawGallery(ctx, W, H, o.gallery);
+
   // Счётчик километров
   const fmt = new Intl.NumberFormat(locale());
   const start = +o.kmStart || 0;
@@ -102,5 +105,4 @@ export function drawHud(ctx, W, H, o) {
   ctx.fillText('© OpenStreetMap contributors · OpenFreeMap · OSRM', W - pad * 0.5, H - bh - 10 * u);
   ctx.restore();
 
-  if (o.gallery) drawGallery(ctx, W, H, o.gallery);
 }

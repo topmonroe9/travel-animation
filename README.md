@@ -38,7 +38,8 @@ video length stay at the bottom.
      shapes the route); a custom label, emoji and color;
    - photos: drop files onto the stop or press “Add”, drag thumbnails to reorder or move them to another
      stop. HEIC from iPhone is converted in the browser. Photos are downscaled to 2400 px and kept in
-     IndexedDB, so they survive a reload;
+     IndexedDB, so they survive a reload. “Whole gallery, s” sets how long the photos of this stop play:
+     7 photos in 4 seconds flip by quickly;
    - how long the car waits, and exact coordinates instead of geocoding.
 3. **Paste as a list** keeps the old text format for quick input:
    `Innsbruck #fuel`, `Verona #sleep ~3`, `Cabin @ 46.49, 11.33`. Photos and styling of stops with the
@@ -46,7 +47,7 @@ video length stay at the bottom.
 4. **Odometer**: “Start at” sets the initial reading — for the second part of a trip the counter can run
    from 2,500 instead of zero. “of N km” can be hidden.
 5. **Video story**: captions, the gallery style (polaroids dropping into a pile, or slides with a
-   crossfade), seconds per photo, timing. “Driving” is pure motion time; stops and galleries add to it.
+   crossfade), photo size in the frame, seconds per photo, timing. “Driving” is pure motion time; stops and galleries add to it.
 6. **Export MP4**: pick 16:9, 9:16 (Reels, Shorts, TikTok) or 1:1 and the quality. Rendering is frame by
    frame inside this tab; keep it visible, because browsers stop rendering background tabs.
 
